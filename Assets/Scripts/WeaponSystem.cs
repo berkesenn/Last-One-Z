@@ -86,6 +86,13 @@ public class WeaponSystem : MonoBehaviour
     {
         currentAmmo--;
         
+        // Play gunshot sound
+        AudioManager audioManager = AudioManager.GetInstance();
+        if (audioManager != null)
+        {
+            audioManager.PlayGunshot();
+        }
+        
         // Muzzle flash
         if (muzzleFlash != null)
         {
@@ -130,13 +137,18 @@ public class WeaponSystem : MonoBehaviour
     {
         isReloading = true;
         Invoke("FinishReload", reloadTime);
+        AudioManager audioManager = AudioManager.GetInstance();
+        if (audioManager != null)
+        {
+            audioManager.PlayReload();
+        }
     }
     
     void FinishReload()
-    {
-        currentAmmo = magazineSize;
-        isReloading = false;
-    }
+{
+    currentAmmo = magazineSize;
+    isReloading = false;
+}
     
     void OnGUI()
     {

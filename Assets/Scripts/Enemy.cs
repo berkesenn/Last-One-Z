@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour
@@ -8,7 +9,6 @@ public class Enemy : MonoBehaviour
     
     [Header("Movement")]
     public float moveSpeed = 3f;
-    public float chaseRange = 20f;
     public float attackRange = 2f;
     public float rotationSpeed = 5f;
     
@@ -19,10 +19,15 @@ public class Enemy : MonoBehaviour
     // Private variables
     private Transform player;
     private float lastAttackTime;
+    private Animator animator;
+    private AudioSource audioSource;
     
     void Start()
     {
         currentHealth = maxHealth;
+        audioSource = GetComponent<AudioSource>();
+        StartCoroutine(ScreamRoutine());
+        animator = GetComponent<Animator>();
         
         // Find player
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -30,9 +35,6 @@ public class Enemy : MonoBehaviour
         {
             player = playerObj.transform;
         }
-        
-        // CharacterController is NOT needed, we keep Capsule Collider for bullets
-        // Just use simple transform movement
     }
     
     void Update()
@@ -42,43 +44,52 @@ public class Enemy : MonoBehaviour
         
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
         
-        // Chase player if in range
-        if (distanceToPlayer <= chaseRange)
+        // Always chase player
+        Vector3 direction = (player.position - transform.position).normalized;
+        direction.y = 0;
+        
+        // Move towards player
+        transform.position += direction * moveSpeed * Time.deltaTime;
+        
+        // Rotate towards player
+        if (direction != Vector3.zero)
         {
-            // Move towards player (simple transform movement)
-            Vector3 direction = (player.position - transform.position).normalized;
-            direction.y = 0; // Keep on same Y level
-            
-            // Move using transform
-            transform.position += direction * moveSpeed * Time.deltaTime;
-            
-            // Rotate towards player
-            if (direction != Vector3.zero)
-            {
-                Quaternion targetRotation = Quaternion.LookRotation(direction);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-            }
-            
-            // Attack if in range
-            if (distanceToPlayer <= attackRange && Time.time >= lastAttackTime + attackCooldown)
-            {
-                AttackPlayer();
-            }
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+        }
+
+        // Attack if in range
+        if (distanceToPlayer <= attackRange && Time.time >= lastAttackTime + attackCooldown)
+        {
+            AttackPlayer();
         }
     }
     
     void AttackPlayer()
+{
+    lastAttackTime = Time.time;
+
+        Debug.Log("ATTACK TRIGGERED");
+
+    AudioManager audioManager = AudioManager.GetInstance();
+    
+    if (animator != null)
     {
-        lastAttackTime = Time.time;
-        
-        // Deal damage to player
-        PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
-        if (playerHealth != null)
-        {
-            playerHealth.TakeDamage(attackDamage);
-            Debug.Log("Zombie attacked player for " + attackDamage + " damage!");
-        }
+        Debug.Log("Animator found, setting Attack trigger");
+        animator.SetTrigger("Attack");
+        audioManager.PlayZombieAttack();
     }
+    else
+    {
+        Debug.Log("Animator is NULL!");
+    }
+    
+    PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+    if (playerHealth != null)
+    {
+        playerHealth.TakeDamage(attackDamage);
+    }
+}
     
     public void TakeDamage(int damage)
     {
@@ -91,10 +102,24 @@ public class Enemy : MonoBehaviour
             Die();
         }
     }
-    
+
     void Die()
     {
         Debug.Log(gameObject.name + " died!");
         Destroy(gameObject);
+    }
+    
+    private IEnumerator ScreamRoutine()
+    {
+    while (true)
+        {
+        float waitTime = Random.Range(3f, 8f);
+        yield return new WaitForSeconds(waitTime);
+
+            if (audioSource != null)
+            {
+            audioSource.Play();
+            }
+        }
     }
 }

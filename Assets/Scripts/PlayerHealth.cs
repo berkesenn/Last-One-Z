@@ -17,8 +17,10 @@ public class PlayerHealth : MonoBehaviour
     public float restartDelay = 3f;
     
     // Private variables
-    private bool isDead = false;
+    [SerializeField]private bool isDead = false;
     private float deathTime = 0f;
+
+    public bool IsDead { get; set; }
     
     void Start()
     {
@@ -52,7 +54,7 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("Player healed " + amount + ". Health: " + currentHealth + "/" + maxHealth);
     }
     
-    void Die()
+    public void Die()
     {
         if (isDead)
             return;
@@ -70,8 +72,15 @@ public class PlayerHealth : MonoBehaviour
         if (playerController != null)
         {
             playerController.enabled = false;
+            Rigidbody rb = playerController.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.isKinematic = true;
+                rb.useGravity = false;
+            }
         }
-        
+
+
         // Restart after delay
         if (restartOnDeath)
         {
