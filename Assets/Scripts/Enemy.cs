@@ -94,6 +94,8 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(int damage)
     {
         currentHealth -= damage;
+        AudioManager audioManager = AudioManager.GetInstance();
+        audioManager.PlayZombieHit();
         
         Debug.Log(gameObject.name + " took " + damage + " damage. Health: " + currentHealth);
         
