@@ -8,7 +8,9 @@ public class Enemy : MonoBehaviour
     public int currentHealth;
     
     [Header("Movement")]
-    public float moveSpeed = 3f;
+    public float walkSpeed = 3f;
+    public float runSpeed = 6f;
+    public float runDistance = 30f; // Player bu mesafede ise koş
     public float attackRange = 2f;
     public float rotationSpeed = 5f;
     
@@ -48,8 +50,17 @@ public class Enemy : MonoBehaviour
         Vector3 direction = (player.position - transform.position).normalized;
         direction.y = 0;
         
-        // Move towards player
-        transform.position += direction * moveSpeed * Time.deltaTime;
+        bool isAttacking = distanceToPlayer <= attackRange;
+        bool shouldRun = distanceToPlayer <= runDistance && distanceToPlayer > attackRange;
+        
+        // Determine current speed
+        float currentMoveSpeed = shouldRun ? runSpeed : walkSpeed;
+        
+        // Move towards player (only if not attacking)
+        if (!isAttacking)
+        {
+            transform.position += direction * currentMoveSpeed * Time.deltaTime;
+        }
         
         // Rotate towards player
         if (direction != Vector3.zero)
@@ -57,9 +68,21 @@ public class Enemy : MonoBehaviour
             Quaternion targetRotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
+        
+        // Update animator with movement speed
+        if (animator != null)
+        {
+            // Set Speed parameter based on movement
+            float animSpeed = isAttacking ? 0f : currentMoveSpeed;
+            animator.SetFloat("Speed", animSpeed);
+            
+            // Optional: Set IsRunning parameter for better control
+            animator.SetBool("IsRunning", shouldRun);
+            animator.SetBool("IsChasing", !isAttacking);
+        }
 
         // Attack if in range
-        if (distanceToPlayer <= attackRange && Time.time >= lastAttackTime + attackCooldown)
+        if (isAttacking && Time.time >= lastAttackTime + attackCooldown)
         {
             AttackPlayer();
         }
