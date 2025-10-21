@@ -6,6 +6,7 @@ public class AudioManager : MonoBehaviour
     public AudioSource weaponAudioSource;
     public AudioSource zombieAudioSource;
     public AudioSource playerAudioSource;
+    public AudioSource musicAudioSource;
     
     [Header("Sound Effects")]
     public AudioClip gunshot;
@@ -15,6 +16,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip footstep;
     public AudioClip playerHurt;
     public AudioClip gameOver;
+    public AudioClip backgroundMusic;
     
     private static AudioManager instance;
 
@@ -76,17 +78,47 @@ public class AudioManager : MonoBehaviour
     {
         if (playerAudioSource != null && playerHurt != null)
         {
+            playerAudioSource.volume = 2.0f;
             playerAudioSource.PlayOneShot(playerHurt);
         }
     }
-    
+
     public void PlayGameOver()
     {
         if (playerAudioSource != null && gameOver != null)
         {
+            playerAudioSource.volume = 2.0f;
             playerAudioSource.PlayOneShot(gameOver);
         }
     }
+
+    public void backgroundMusicPlay()
+    {
+        if (musicAudioSource != null && backgroundMusic != null)
+        {
+            musicAudioSource.volume = 0.1f;
+            musicAudioSource.clip = backgroundMusic;
+            musicAudioSource.loop = true;
+            musicAudioSource.Play();
+        }
+    }
+
+    public void StopBackgroundMusic()
+    {
+        if (musicAudioSource != null)
+        {
+            musicAudioSource.Stop();
+        }
+    }
+
+    public void LowerZombieVolume()
+    {
+        if (zombieAudioSource != null && gameOver == true)
+        {
+            zombieAudioSource.volume = 0.1f; // Zombi seslerini %10'a düşür
+        }
+    }
+
     
     public static AudioManager GetInstance()
     {

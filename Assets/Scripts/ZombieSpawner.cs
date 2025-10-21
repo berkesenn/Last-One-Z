@@ -13,7 +13,8 @@ public class ZombieSpawner : MonoBehaviour
     [Header("Spawn Area")]
     public Vector3 spawnAreaCenter = Vector3.zero;
     public float spawnAreaRadius = 50f;
-    public float minDistanceFromPlayer = 15f;
+    public float minDistanceFromPlayer = 25f; // Minimum 25 metre uzakta spawn olsun
+    public float maxDistanceFromPlayer = 60f; // Maximum 60 metre uzakta (çok uzak olmasın)
     public float spawnHeight = 1f;
     
     [Header("References")]
@@ -92,26 +93,37 @@ public class ZombieSpawner : MonoBehaviour
         
         for (int i = 0; i < maxAttempts; i++)
         {
-            // Random position in circle
-            Vector2 randomCircle = Random.insideUnitCircle * spawnAreaRadius;
-            Vector3 randomPosition = spawnAreaCenter + new Vector3(randomCircle.x, 0, randomCircle.y);
+            // Random açı (360 derece) ve mesafe
+            float randomAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+            float randomDistance = Random.Range(minDistanceFromPlayer, maxDistanceFromPlayer);
             
-            // Check distance from player
+            // Player'ın etrafında dairesel spawn pozisyonu
+            Vector3 randomPosition = Vector3.zero;
             if (player != null)
             {
-                float distanceToPlayer = Vector3.Distance(randomPosition, player.position);
-                
-                if (distanceToPlayer < minDistanceFromPlayer)
-                {
-                    continue;
-                }
+                randomPosition = player.position + new Vector3(
+                    Mathf.Cos(randomAngle) * randomDistance,
+                    0,
+                    Mathf.Sin(randomAngle) * randomDistance
+                );
+            }
+            else
+            {
+                // Player yoksa merkeze göre spawn
+                Vector2 randomCircle = Random.insideUnitCircle * spawnAreaRadius;
+                randomPosition = spawnAreaCenter + new Vector3(randomCircle.x, 0, randomCircle.y);
             }
             
             // Raycast to find ground
             RaycastHit hit;
             if (Physics.Raycast(randomPosition + Vector3.up * 100f, Vector3.down, out hit, 200f))
             {
-                return hit.point + Vector3.up * spawnHeight;
+                Vector3 spawnPos = hit.point + Vector3.up * spawnHeight;
+                
+                // Debug: Spawn pozisyonunu göster
+                Debug.Log($"Zombie spawn: {spawnPos}, Player: {player.position}, Açı: {randomAngle * Mathf.Rad2Deg}°, Mesafe: {randomDistance}m");
+                
+                return spawnPos;
             }
         }
         

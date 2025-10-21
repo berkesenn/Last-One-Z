@@ -17,6 +17,7 @@ public class WeaponSystem : MonoBehaviour
     [Header("References")]
     public Camera fpsCam;
     public PlayerController playerController; // Kamera tepme efekti için
+    public PlayerHealth playerHealth; // GameOver kontrolü için
     public ParticleSystem muzzleFlash;
     public GameObject impactEffect;
     public Transform firePoint;
@@ -96,6 +97,13 @@ public class WeaponSystem : MonoBehaviour
     
     void Update()
     {
+        // GameOver kontrolü - ölüyse hiçbir şey yapma
+        if (playerHealth != null && playerHealth.IsDead)
+        {
+            Debug.Log("WeaponSystem: Player ölü, ateş edilemiyor");
+            return;
+        }
+        
         if (isReloading)
             return;
         

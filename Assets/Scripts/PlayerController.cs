@@ -28,6 +28,10 @@ public class PlayerController : MonoBehaviour
     public List<string> visibleMeshNames = new List<string> { "Man_Arms_Mesh" }; // Görünür olacak mesh'ler
     public bool castShadowsOnly = true; // Gizli mesh'ler sadece gölge mi atsın
     
+    [Header("Movement Boundaries")]
+    public bool useBoundaries = true; // Sınırları aktif et
+    public float boundaryMargin = 10f; // Terrain kenarından ne kadar uzakta dur (metre)
+    
     // Private variables
     private CharacterController controller;
     private Vector3 velocity;
@@ -35,6 +39,9 @@ public class PlayerController : MonoBehaviour
     private Vector3 currentCameraRecoil;
     private Vector3 targetCameraRecoil;
     private bool initialized = false;
+    private Terrain terrain;
+    private Vector3 terrainSize;
+    private Vector3 terrainPosition;
 
     // Footstep variables
     private Vector3 lastPosition;
@@ -45,6 +52,11 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
+        AudioManager audioManager = AudioManager.GetInstance();
+        if (audioManager != null)
+        {
+            audioManager.backgroundMusicPlay();
+        }
         
         // Get Animator component if not assigned
         if (animator == null)
@@ -66,9 +78,14 @@ public class PlayerController : MonoBehaviour
             cameraTransform = Camera.main.transform;
         }
         
-        if (Terrain.activeTerrain != null)
+        // Terrain bilgilerini al
+        terrain = Terrain.activeTerrain;
+        if (terrain != null)
         {
-            float terrainHeight = Terrain.activeTerrain.SampleHeight(transform.position);
+            terrainSize = terrain.terrainData.size;
+            terrainPosition = terrain.transform.position;
+            
+            float terrainHeight = terrain.SampleHeight(transform.position);
             Vector3 startPosition = transform.position;
             startPosition.y = terrainHeight + controller.height / 2f;
             transform.position = startPosition;
@@ -144,7 +161,19 @@ public class PlayerController : MonoBehaviour
 
         // Movement direction
         Vector3 move = transform.right * x + transform.forward * z;
-        controller.Move(move * currentSpeed * Time.deltaTime);
+        Vector3 movement = move * currentSpeed * Time.deltaTime;
+        
+        // Hareket öncesi pozisyonu kaydet
+        Vector3 nextPosition = transform.position + movement;
+        
+        // Sınır kontrolü
+        if (useBoundaries && terrain != null)
+        {
+            nextPosition = ClampPositionToBoundaries(nextPosition);
+        }
+        
+        // Hareketi uygula
+        controller.Move(nextPosition - transform.position);
         
         // Update animations
         if (animator != null && animator.runtimeAnimatorController != null)
@@ -236,6 +265,21 @@ public class PlayerController : MonoBehaviour
                 }
             }
         }
+    }
+    
+    Vector3 ClampPositionToBoundaries(Vector3 position)
+    {
+        // Terrain sınırlarını hesapla (margin dahil)
+        float minX = terrainPosition.x + boundaryMargin;
+        float maxX = terrainPosition.x + terrainSize.x - boundaryMargin;
+        float minZ = terrainPosition.z + boundaryMargin;
+        float maxZ = terrainPosition.z + terrainSize.z - boundaryMargin;
+        
+        // Pozisyonu sınırla
+        position.x = Mathf.Clamp(position.x, minX, maxX);
+        position.z = Mathf.Clamp(position.z, minZ, maxZ);
+        
+        return position;
     }
     
     void ApplyCameraRecoil()

@@ -14,7 +14,7 @@ public class PlayerHealth : MonoBehaviour
     
     [Header("Death Settings")]
     public bool restartOnDeath = true;
-    public float restartDelay = 3f;
+    public float restartDelay = 5f; // 3'ten 5'e çıkardım (2 saniye daha)
     
     // Private variables
     [SerializeField]private bool isDead = false;
@@ -32,6 +32,11 @@ public class PlayerHealth : MonoBehaviour
         if (isDead)
             return;
         
+        AudioManager audioManager = AudioManager.GetInstance();
+        if (audioManager != null)
+        {
+            audioManager.PlayPlayerHurt();
+        }
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
         
@@ -60,8 +65,24 @@ public class PlayerHealth : MonoBehaviour
             return;
         
         isDead = true;
+        IsDead = true; // Property'yi de set et
         deathTime = Time.time;
         Debug.Log("Player died!");
+
+        AudioManager audioManager = AudioManager.GetInstance();
+        if (audioManager != null)
+        {
+            audioManager.PlayGameOver();
+            audioManager.StopBackgroundMusic(); // Background music'i durdur
+            audioManager.LowerZombieVolume(); // Zombi seslerini kıs
+        }
+
+        // Timer'ı durdur
+        GameManager gameManager = FindFirstObjectByType<GameManager>();
+        if (gameManager != null)
+        {
+            gameManager.SetGameOver();
+        }
         
         // Lock cursor
         Cursor.lockState = CursorLockMode.None;
