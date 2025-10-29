@@ -16,6 +16,7 @@ public class ZombieSpawner : MonoBehaviour
     public float minDistanceFromPlayer = 25f; // Minimum 25 metre uzakta spawn olsun
     public float maxDistanceFromPlayer = 60f; // Maximum 60 metre uzakta (çok uzak olmasın)
     public float spawnHeight = 1f;
+    public LayerMask groundLayer; // Sadece zemin/terrain layer'ı
     
     [Header("References")]
     public Transform player;
@@ -123,16 +124,31 @@ public class ZombieSpawner : MonoBehaviour
                 randomPosition = spawnAreaCenter + new Vector3(randomCircle.x, 0, randomCircle.y);
             }
             
-            // Raycast to find ground
+            // Raycast to find ground (sadece zemin layer'ına çarpsın)
             RaycastHit hit;
-            if (Physics.Raycast(randomPosition + Vector3.up * 100f, Vector3.down, out hit, 200f))
+            
+            // Eğer groundLayer ayarlanmışsa kullan, yoksa tüm layer'lara bak
+            if (groundLayer.value != 0)
             {
-                Vector3 spawnPos = hit.point + Vector3.up * spawnHeight;
-                
-                // Debug: Spawn pozisyonunu göster
-                Debug.Log($"Zombie spawn: {spawnPos}, Player: {player.position}, Açı: {randomAngle * Mathf.Rad2Deg}°, Mesafe: {randomDistance}m");
-                
-                return spawnPos;
+                // Layer mask ile sadece zemini kontrol et
+                if (Physics.Raycast(randomPosition + Vector3.up * 200f, Vector3.down, out hit, 400f, groundLayer))
+                {
+                    Vector3 spawnPos = hit.point + Vector3.up * spawnHeight;
+                    return spawnPos;
+                }
+            }
+            else
+            {
+                // Layer mask yoksa normal kontrolü yap
+                if (Physics.Raycast(randomPosition + Vector3.up * 200f, Vector3.down, out hit, 400f))
+                {
+                    // Eğer çarpılan yüzey yukarı bakıyorsa (zemin) spawn et
+                    if (Vector3.Dot(hit.normal, Vector3.up) > 0.7f)
+                    {
+                        Vector3 spawnPos = hit.point + Vector3.up * spawnHeight;
+                        return spawnPos;
+                    }
+                }
             }
         }
         

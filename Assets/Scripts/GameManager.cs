@@ -54,7 +54,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void BackToMenu()
+    public void BackToMenu()
     {
         // Menü sahnesine dön
         SceneManager.LoadScene("menu"); // Menü sahneni ismini kontrol et!
