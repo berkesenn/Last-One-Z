@@ -7,8 +7,8 @@ public class ZombieSpawner : MonoBehaviour
     public GameObject zombiePrefab;
     public int maxZombies = 20;
     public float startSpawnRate = 5f;
-    public float minSpawnRate = 1f;
-    public float spawnRateDecrease = 0.1f;
+    public float minSpawnRate = 1f; // En hızlı: 1 saniyede 1 zombi
+    public float spawnRateDecrease = 1f; // Her aşamada 1 saniye azalır (5→4→3→2→1)
     
     [Header("Spawn Area")]
     public Vector3 spawnAreaCenter = Vector3.zero;
@@ -24,6 +24,7 @@ public class ZombieSpawner : MonoBehaviour
     private float currentSpawnRate;
     private int zombiesSpawned = 0;
     private int currentZombieCount = 0;
+    private bool hasStoppedSpawning = false;
     
     void Start()
     {
@@ -40,6 +41,14 @@ public class ZombieSpawner : MonoBehaviour
         }
         
         StartCoroutine(SpawnZombies());
+    }
+    
+    void Update()
+    {
+        if (!hasStoppedSpawning)
+        {
+            StopSpawningIfDead();
+        }
     }
     
     IEnumerator SpawnZombies()
@@ -133,24 +142,38 @@ public class ZombieSpawner : MonoBehaviour
     
     void IncreaseDifficulty()
     {
-        // Every 5 zombies, decrease spawn rate
+        // Her 5 zombide bir aşama ilerle (5→4→3→2→1 saniye)
         if (zombiesSpawned % 5 == 0)
         {
             currentSpawnRate = Mathf.Max(minSpawnRate, currentSpawnRate - spawnRateDecrease);
             Debug.Log("Spawn rate increased! New rate: " + currentSpawnRate + "s");
         }
     }
-    
+
     // Visualize spawn area in editor
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(spawnAreaCenter, spawnAreaRadius);
-        
+
         Gizmos.color = Color.yellow;
         if (player != null)
         {
             Gizmos.DrawWireSphere(player.position, minDistanceFromPlayer);
+        }
+    }
+    
+    void StopSpawningIfDead()
+    {
+        if (player == null)
+            return;
+        
+        PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+        if (playerHealth != null && playerHealth.IsDead)
+        {
+            StopAllCoroutines();
+            hasStoppedSpawning = true;
+            Debug.Log("Player is dead. Stopping zombie spawning.");
         }
     }
 }

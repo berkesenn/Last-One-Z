@@ -5,12 +5,9 @@ public class PlayerHealth : MonoBehaviour
 {
     [Header("Health Settings")]
     public int maxHealth = 100;
-    public int currentHealth;
+    public int currentHealth; // Public yapıldı ki HealthBarUI erişebilsin
     
-    [Header("UI Settings")]
-    public bool showHealthUI = true;
-    public Color healthBarColor = Color.green;
-    public Color lowHealthColor = Color.red;
+    // Eski OnGUI UI ayarları kaldırıldı, artık Canvas + HealthBarUI kullanıyoruz
     
     [Header("Death Settings")]
     public bool restartOnDeath = true;
@@ -84,16 +81,25 @@ public class PlayerHealth : MonoBehaviour
             gameManager.SetGameOver();
         }
         
+        // Ekranı 1 saniye sonra karart (fade to black effect)
+        ScreenFadeEffect fadeEffect = ScreenFadeEffect.GetInstance();
+        if (fadeEffect != null)
+        {
+            fadeEffect.FadeToBlack(1f, 0.7f); // 1 saniye bekle, 0.7 saniyede karart
+        }
+        
         // Lock cursor
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         
-        // Disable controls
+        // Disable controls and play death animation
         PlayerController playerController = GetComponent<PlayerController>();
         if (playerController != null)
         {
+            playerController.PlayDeathAnimation(); // Animasyonu PlayerController'da oynat
             playerController.enabled = false;
-            Rigidbody rb = playerController.GetComponent<Rigidbody>();
+            
+            Rigidbody rb = GetComponent<Rigidbody>();
             if (rb != null)
             {
                 rb.isKinematic = true;
@@ -111,47 +117,26 @@ public class PlayerHealth : MonoBehaviour
     
     void RestartGame()
     {
+        // Fade efektini sıfırla
+        ScreenFadeEffect fadeEffect = ScreenFadeEffect.GetInstance();
+        if (fadeEffect != null)
+        {
+            fadeEffect.ResetFade();
+        }
+        
+        // Camera'yı eski yerine döndür (eğer scene reload değilse)
+        PlayerController playerController = GetComponent<PlayerController>();
+        if (playerController != null)
+        {
+            playerController.ResetCamera();
+        }
+        
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
     
-    void OnGUI()
+    public float GetDeathTime()
     {
-        if (!showHealthUI)
-            return;
-        
-        // Health bar background
-        float barWidth = 200f;
-        float barHeight = 30f;
-        float barX = 20f;
-        float barY = 20f;
-        
-        // Background (black)
-        GUI.color = Color.black;
-        GUI.DrawTexture(new Rect(barX - 2, barY - 2, barWidth + 4, barHeight + 4), Texture2D.whiteTexture);
-        
-        // Health bar color (red to green based on health)
-        float healthPercent = (float)currentHealth / maxHealth;
-        GUI.color = Color.Lerp(lowHealthColor, healthBarColor, healthPercent);
-        GUI.DrawTexture(new Rect(barX, barY, barWidth * healthPercent, barHeight), Texture2D.whiteTexture);
-        
-        // Health text
-        GUI.color = Color.white;
-        GUI.skin.label.fontSize = 18;
-        GUI.skin.label.alignment = TextAnchor.MiddleCenter;
-        GUI.Label(new Rect(barX, barY, barWidth, barHeight), currentHealth + " / " + maxHealth);
-        
-        // Death message
-        if (isDead)
-        {
-            GUI.skin.label.fontSize = 48;
-            GUI.skin.label.alignment = TextAnchor.MiddleCenter;
-            GUI.color = Color.red;
-            GUI.Label(new Rect(0, Screen.height / 2 - 50, Screen.width, 100), "YOU DIED");
-            
-            GUI.skin.label.fontSize = 24;
-            GUI.color = Color.white;
-            float timeRemaining = restartDelay - (Time.time - deathTime);
-            GUI.Label(new Rect(0, Screen.height / 2 + 20, Screen.width, 50), "Restarting in " + Mathf.Ceil(timeRemaining) + "...");
-        }
+        return deathTime;
     }
+
 }

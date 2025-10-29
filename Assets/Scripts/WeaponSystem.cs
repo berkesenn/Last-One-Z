@@ -100,7 +100,6 @@ public class WeaponSystem : MonoBehaviour
         // GameOver kontrolü - ölüyse hiçbir şey yapma
         if (playerHealth != null && playerHealth.IsDead)
         {
-            Debug.Log("WeaponSystem: Player ölü, ateş edilemiyor");
             return;
         }
         
