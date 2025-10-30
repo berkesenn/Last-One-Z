@@ -6,26 +6,26 @@ public class WeaponSystem : MonoBehaviour
     public int damage = 25;
     public float range = 100f;
     public float fireRate = 0.1f;
-    public int magazineSize = 12; // Pistol için 12 mermi
+    public int magazineSize = 12;
     public float reloadTime = 2f;
     
     [Header("Weapon Behavior")]
-    public bool isAutomatic = false; // Pistol tekli ateş
+    public bool isAutomatic = false;
     public float recoilAmount = 2f;
     public float recoilSpeed = 10f;
     
     [Header("References")]
     public Camera fpsCam;
-    public PlayerController playerController; // Kamera tepme efekti için
-    public PlayerHealth playerHealth; // GameOver kontrolü için
+    public PlayerController playerController;
+    public PlayerHealth playerHealth;
     public ParticleSystem muzzleFlash;
     public GameObject impactEffect;
     public Transform firePoint;
     
     [Header("Trigger Finger")]
-    public Transform rightIndexFinger; // Sağ işaret parmağı kemiği (index_01_r)
-    public float triggerPullRotation = 15f; // Tetik çekerken parmağın dönüş açısı
-    public float triggerSpeed = 20f; // Tetik animasyon hızı
+    public Transform rightIndexFinger;
+    public float triggerPullRotation = 15f;
+    public float triggerSpeed = 20f;
     
     [Header("UI")]
     public bool showAmmoUI = true;
@@ -50,33 +50,28 @@ public class WeaponSystem : MonoBehaviour
         
         originalRotation = transform.localEulerAngles;
         
-        // Parmağın orijinal rotasyonunu kaydet
         if (rightIndexFinger != null)
         {
             originalFingerRotation = rightIndexFinger.localEulerAngles;
         }
         
-        // Muzzle flash ayarları
         if (muzzleFlash != null)
         {
-            // Particle System ayarları
             var main = muzzleFlash.main;
             main.playOnAwake = false;
             main.loop = false;
-            main.stopAction = ParticleSystemStopAction.None; // Objeyi kapatma!
+            main.stopAction = ParticleSystemStopAction.None;
             muzzleFlash.Stop();
             
-            // Child Particle System'leri de ayarla
             ParticleSystem[] allParticles = muzzleFlash.GetComponentsInChildren<ParticleSystem>(true);
             foreach (ParticleSystem ps in allParticles)
             {
                 var psMain = ps.main;
                 psMain.playOnAwake = false;
                 psMain.loop = false;
-                psMain.stopAction = ParticleSystemStopAction.None; // Objeyi kapatma!
+                psMain.stopAction = ParticleSystemStopAction.None;
             }
             
-            // WFX Light Flicker script'lerini devre dışı bırak
             MonoBehaviour[] scripts = muzzleFlash.GetComponentsInChildren<MonoBehaviour>();
             foreach (MonoBehaviour script in scripts)
             {
@@ -86,7 +81,6 @@ public class WeaponSystem : MonoBehaviour
                 }
             }
             
-            // Tüm Light component'lerini kapat
             Light[] lights = muzzleFlash.GetComponentsInChildren<Light>(true);
             foreach (Light light in lights)
             {
@@ -97,7 +91,12 @@ public class WeaponSystem : MonoBehaviour
     
     void Update()
     {
-        // GameOver kontrolü - ölüyse hiçbir şey yapma
+        // Don't process input when game is paused
+        if (GameManager.IsPaused)
+        {
+            return;
+        }
+        
         if (playerHealth != null && playerHealth.IsDead)
         {
             return;
@@ -155,18 +154,14 @@ public class WeaponSystem : MonoBehaviour
             audioManager.PlayGunshot();
         }
         
-        // Muzzle flash - hem particle hem light
         if (muzzleFlash != null)
         {
-            // Objeyi aktif et (eğer devre dışıysa)
             muzzleFlash.gameObject.SetActive(true);
             
-            // Particle System'i tetikle
-            muzzleFlash.Stop(); // Önce durdur
-            muzzleFlash.Clear(); // Temizle
-            muzzleFlash.Play(); // Başlat
+            muzzleFlash.Stop();
+            muzzleFlash.Clear();
+            muzzleFlash.Play();
             
-            // Light'ı kısa süreliğine aç
             StartCoroutine(FlashLight());
         }
         
@@ -188,13 +183,20 @@ public class WeaponSystem : MonoBehaviour
         
         if (Physics.Raycast(fpsCam.transform.position, shootDirection, out hit, range))
         {
-            Debug.Log("Hit: " + hit.transform.name);
-            
-            // Damage
-            Enemy enemy = hit.transform.GetComponent<Enemy>();
-            if (enemy != null)
+            // Check for headshot first
+            EnemyHeadshot headshot = hit.transform.GetComponent<EnemyHeadshot>();
+            if (headshot != null)
             {
-                enemy.TakeDamage(damage);
+                headshot.TakeDamage(damage);
+            }
+            else
+            {
+                // Check for body shot
+                Enemy enemy = hit.transform.GetComponent<Enemy>();
+                if (enemy != null)
+                {
+                    enemy.TakeDamage(damage, false);
+                }
             }
             
             // Impact effect
@@ -267,17 +269,14 @@ public class WeaponSystem : MonoBehaviour
     {
         if (muzzleFlash != null)
         {
-            // Tüm child Light'ları bul ve aç
             Light[] lights = muzzleFlash.GetComponentsInChildren<Light>(true);
             foreach (Light light in lights)
             {
                 light.enabled = true;
             }
             
-            // 0.05 saniye bekle
             yield return new WaitForSeconds(0.05f);
             
-            // Light'ları kapat
             foreach (Light light in lights)
             {
                 light.enabled = false;

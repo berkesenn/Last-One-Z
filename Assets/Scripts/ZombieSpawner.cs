@@ -7,16 +7,16 @@ public class ZombieSpawner : MonoBehaviour
     public GameObject zombiePrefab;
     public int maxZombies = 20;
     public float startSpawnRate = 5f;
-    public float minSpawnRate = 1f; // En hızlı: 1 saniyede 1 zombi
-    public float spawnRateDecrease = 1f; // Her aşamada 1 saniye azalır (5→4→3→2→1)
+    public float minSpawnRate = 1f;
+    public float spawnRateDecrease = 1f;
     
     [Header("Spawn Area")]
     public Vector3 spawnAreaCenter = Vector3.zero;
     public float spawnAreaRadius = 50f;
-    public float minDistanceFromPlayer = 25f; // Minimum 25 metre uzakta spawn olsun
-    public float maxDistanceFromPlayer = 60f; // Maximum 60 metre uzakta (çok uzak olmasın)
+    public float minDistanceFromPlayer = 25f;
+    public float maxDistanceFromPlayer = 60f;
     public float spawnHeight = 1f;
-    public LayerMask groundLayer; // Sadece zemin/terrain layer'ı
+    public LayerMask groundLayer;
     
     [Header("References")]
     public Transform player;
@@ -103,11 +103,9 @@ public class ZombieSpawner : MonoBehaviour
         
         for (int i = 0; i < maxAttempts; i++)
         {
-            // Random açı (360 derece) ve mesafe
             float randomAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
             float randomDistance = Random.Range(minDistanceFromPlayer, maxDistanceFromPlayer);
             
-            // Player'ın etrafında dairesel spawn pozisyonu
             Vector3 randomPosition = Vector3.zero;
             if (player != null)
             {
@@ -119,18 +117,14 @@ public class ZombieSpawner : MonoBehaviour
             }
             else
             {
-                // Player yoksa merkeze göre spawn
                 Vector2 randomCircle = Random.insideUnitCircle * spawnAreaRadius;
                 randomPosition = spawnAreaCenter + new Vector3(randomCircle.x, 0, randomCircle.y);
             }
             
-            // Raycast to find ground (sadece zemin layer'ına çarpsın)
             RaycastHit hit;
             
-            // Eğer groundLayer ayarlanmışsa kullan, yoksa tüm layer'lara bak
             if (groundLayer.value != 0)
             {
-                // Layer mask ile sadece zemini kontrol et
                 if (Physics.Raycast(randomPosition + Vector3.up * 200f, Vector3.down, out hit, 400f, groundLayer))
                 {
                     Vector3 spawnPos = hit.point + Vector3.up * spawnHeight;
@@ -139,10 +133,8 @@ public class ZombieSpawner : MonoBehaviour
             }
             else
             {
-                // Layer mask yoksa normal kontrolü yap
                 if (Physics.Raycast(randomPosition + Vector3.up * 200f, Vector3.down, out hit, 400f))
                 {
-                    // Eğer çarpılan yüzey yukarı bakıyorsa (zemin) spawn et
                     if (Vector3.Dot(hit.normal, Vector3.up) > 0.7f)
                     {
                         Vector3 spawnPos = hit.point + Vector3.up * spawnHeight;
@@ -152,21 +144,16 @@ public class ZombieSpawner : MonoBehaviour
             }
         }
         
-        // Fallback position
         return spawnAreaCenter + new Vector3(Random.Range(-20f, 20f), spawnHeight, Random.Range(-20f, 20f));
     }
     
     void IncreaseDifficulty()
     {
-        // Her 5 zombide bir aşama ilerle (5→4→3→2→1 saniye)
         if (zombiesSpawned % 5 == 0)
         {
             currentSpawnRate = Mathf.Max(minSpawnRate, currentSpawnRate - spawnRateDecrease);
-            Debug.Log("Spawn rate increased! New rate: " + currentSpawnRate + "s");
         }
     }
-
-    // Visualize spawn area in editor
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
@@ -189,7 +176,6 @@ public class ZombieSpawner : MonoBehaviour
         {
             StopAllCoroutines();
             hasStoppedSpawning = true;
-            Debug.Log("Player is dead. Stopping zombie spawning.");
         }
     }
 }

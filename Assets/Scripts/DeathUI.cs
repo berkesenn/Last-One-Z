@@ -4,30 +4,21 @@ using TMPro;
 public class DeathUI : MonoBehaviour
 {
     [Header("Death UI")]
-    public TextMeshProUGUI deathText; // "YOU DIED" yazısı
-    public TextMeshProUGUI restartText; // "Restarting in..." yazısı
+    public TextMeshProUGUI deathText;
+    public TextMeshProUGUI restartText;
     
     private PlayerHealth playerHealth;
     private Canvas deathCanvas;
     
     void Start()
     {
-        // PlayerHealth scriptini bul
         playerHealth = FindFirstObjectByType<PlayerHealth>();
         
-        if (playerHealth == null)
-        {
-            Debug.LogError("PlayerHealth not found!");
-        }
-        
-        // Canvas'ı al
         deathCanvas = GetComponent<Canvas>();
         if (deathCanvas != null)
         {
-            deathCanvas.sortingOrder = 10000; // En üstte
+            deathCanvas.sortingOrder = 9998;
         }
-        
-        // Başlangıçta gizle
         HideDeathUI();
     }
     
@@ -36,7 +27,6 @@ public class DeathUI : MonoBehaviour
         if (playerHealth == null)
             return;
         
-        // Ölüm mesajlarını göster/gizle
         if (playerHealth.IsDead)
         {
             ShowDeathUI();
@@ -55,6 +45,11 @@ public class DeathUI : MonoBehaviour
     
     void ShowDeathUI()
     {
+        if (deathCanvas != null)
+        {
+            deathCanvas.sortingOrder = 10000;
+        }
+        
         if (deathText != null)
             deathText.gameObject.SetActive(true);
         if (restartText != null)
@@ -63,6 +58,11 @@ public class DeathUI : MonoBehaviour
     
     void HideDeathUI()
     {
+        if (deathCanvas != null)
+        {
+            deathCanvas.sortingOrder = 9998;
+        }
+        
         if (deathText != null)
             deathText.gameObject.SetActive(false);
         if (restartText != null)

@@ -18,21 +18,19 @@ public class Flashlight : MonoBehaviour
     
     [Header("Battery (Optional)")]
     public bool useBattery = false;
-    public float batteryLife = 300f; // 5 dakika
-    public float batteryDrainRate = 1f; // Saniyede azalma
+    public float batteryLife = 300f; // 5 minutes
+    public float batteryDrainRate = 1f; // Per second
     private float currentBattery;
     
     private bool isOn = false;
     
     void Start()
     {
-        // Eğer flashlight referansı yoksa, bu objede bul
         if (flashlight == null)
         {
             flashlight = GetComponentInChildren<Light>();
         }
         
-        // Başlangıçta kapalı
         if (flashlight != null)
         {
             flashlight.enabled = false;
@@ -44,12 +42,10 @@ public class Flashlight : MonoBehaviour
             flashlight.shadows = LightShadows.Soft;
         }
         
-        // Audio source ekle
         audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.playOnAwake = false;
-        audioSource.spatialBlend = 0; // 2D ses
+        audioSource.spatialBlend = 0;
         
-        // Batarya başlat
         if (useBattery)
         {
             currentBattery = batteryLife;
@@ -58,31 +54,26 @@ public class Flashlight : MonoBehaviour
     
     void Update()
     {
-        // F tuşu ile aç/kapat
         if (Input.GetKeyDown(toggleKey))
         {
             ToggleFlashlight();
         }
         
-        // Batarya sistemi
         if (isOn && useBattery)
         {
             currentBattery -= batteryDrainRate * Time.deltaTime;
             
-            // Batarya bitti
             if (currentBattery <= 0)
             {
                 currentBattery = 0;
                 TurnOff();
             }
             
-            // Batarya azaldıkça ışık azalır
             if (flashlight != null)
             {
                 float batteryPercent = currentBattery / batteryLife;
                 flashlight.intensity = intensity * batteryPercent;
                 
-                // Titreme efekti (batarya azaldıkça artar)
                 if (batteryPercent < 0.3f)
                 {
                     flashlight.intensity += Random.Range(-0.2f, 0.2f) * (1f - batteryPercent);
@@ -105,10 +96,8 @@ public class Flashlight : MonoBehaviour
     
     void TurnOn()
     {
-        // Batarya kontrolü
         if (useBattery && currentBattery <= 0)
         {
-            Debug.Log("Flashlight battery is dead!");
             return;
         }
         
@@ -117,7 +106,6 @@ public class Flashlight : MonoBehaviour
             flashlight.enabled = true;
             isOn = true;
             PlayToggleSound();
-            Debug.Log("Flashlight ON");
         }
     }
     
@@ -128,7 +116,6 @@ public class Flashlight : MonoBehaviour
             flashlight.enabled = false;
             isOn = false;
             PlayToggleSound();
-            Debug.Log("Flashlight OFF");
         }
     }
     
@@ -140,14 +127,11 @@ public class Flashlight : MonoBehaviour
         }
     }
     
-    // Batarya yenile (medkit gibi)
     public void RechargeBattery(float amount)
     {
         currentBattery = Mathf.Min(currentBattery + amount, batteryLife);
-        Debug.Log("Battery recharged: " + currentBattery + "/" + batteryLife);
     }
     
-    // Dışarıdan kontrol için
     public bool IsOn()
     {
         return isOn;

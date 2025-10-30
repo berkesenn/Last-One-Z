@@ -7,41 +7,93 @@ public class GameManager : MonoBehaviour
 {
     [Header("Timer Settings")]
     public TextMeshProUGUI timerText;
-    public TextMeshProUGUI bestTimeText; // En iyi süreyi göster (opsiyonel)
+    public TextMeshProUGUI bestTimeText;
     private float gameTime = 0f;
     private bool isGameOver = false;
     private float bestTime = 0f;
 
     [Header("Menu Settings")]
-    public Button backToMenuButton; // Butonu buraya bağla
+    public Button backToMenuButton;
+    
+    [Header("UI Elements to Hide on Death")]
+    public Canvas gameplayCanvas;
+    
+    [Header("Pause Settings")]
+    public GameObject pausePanel;
+    private bool isPaused = false;
+    
+    public static bool IsPaused { get; private set; } = false;
 
     void Start()
     {
         gameTime = 0f;
-        
-        // En iyi süreyi yükle
         bestTime = PlayerPrefs.GetFloat("BestTime", 0f);
         UpdateBestTimeDisplay();
         
-        // Butona tıklama olayını bağla
-        if (backToMenuButton != null)
+        if (pausePanel != null)
         {
-            backToMenuButton.onClick.AddListener(BackToMenu);
+            pausePanel.SetActive(false);
         }
     }
 
     void Update()
     {
-        if (!isGameOver)
+        if (Input.GetKeyDown(KeyCode.Escape) && !isGameOver)
         {
-            // Oyun süresi artır
-            gameTime += Time.deltaTime;
-
-            // Timer'ı güncelle
-            UpdateTimerDisplay();
+            TogglePause();
         }
         
+        if (!isGameOver && !isPaused)
+        {
+            gameTime += Time.deltaTime;
+            UpdateTimerDisplay();
+        }
+    }
+    
+    void TogglePause()
+    {
+        isPaused = !isPaused;
+        IsPaused = isPaused; // Update static property
         
+        if (isPaused)
+        {
+            Time.timeScale = 0f;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            
+            if (pausePanel != null)
+            {
+                pausePanel.SetActive(true);
+            }
+        }
+        else
+        {
+            Time.timeScale = 1f;
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            
+            if (pausePanel != null)
+            {
+                pausePanel.SetActive(false);
+            }
+        }
+    }
+    
+    public void ResumeGame()
+    {
+        if (isPaused)
+        {
+            TogglePause();
+        }
+    }
+    
+    public void QuitGame()
+    {
+        #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+        #else
+            Application.Quit();
+        #endif
     }
 
     void UpdateTimerDisplay()
@@ -56,22 +108,40 @@ public class GameManager : MonoBehaviour
 
     public void BackToMenu()
     {
-        // Menü sahnesine dön
-        SceneManager.LoadScene("menu"); // Menü sahneni ismini kontrol et!
+        ScreenFadeEffect fadeEffect = ScreenFadeEffect.GetInstance();
+        if (fadeEffect != null)
+        {
+            fadeEffect.ResetFade();
+            Destroy(fadeEffect.gameObject);
+        }
+        
+        Time.timeScale = 1f;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        
+        SceneManager.LoadScene("menu");
     }
 
     public void SetGameOver()
     {
         isGameOver = true;
         
-        // Eğer mevcut süre rekordan uzunsa, yeni rekor kaydet
         if (gameTime > bestTime)
         {
             bestTime = gameTime;
             PlayerPrefs.SetFloat("BestTime", bestTime);
-            PlayerPrefs.Save(); // Hemen kaydet
+            PlayerPrefs.Save();
             UpdateBestTimeDisplay();
-            Debug.Log("New Best Time: " + bestTime + " seconds!");
+        }
+        
+        if (gameplayCanvas != null)
+        {
+            gameplayCanvas.gameObject.SetActive(false);
+        }
+        
+        if (backToMenuButton != null)
+        {
+            backToMenuButton.interactable = false;
         }
     }
     

@@ -115,7 +115,7 @@ public class AudioManager : MonoBehaviour
     {
         if (zombieAudioSource != null && gameOver == true)
         {
-            zombieAudioSource.volume = 0.1f; // Zombi seslerini %10'a düşür
+            zombieAudioSource.volume = 0.1f;
         }
     }
 

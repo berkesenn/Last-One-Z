@@ -15,8 +15,20 @@ public class Crosshair : MonoBehaviour
     public float maxSpread = 20f;
     private float currentSpread = 0f;
     
+    private PlayerHealth playerHealth;
+    
+    void Start()
+    {
+        playerHealth = FindFirstObjectByType<PlayerHealth>();
+    }
+    
     void OnGUI()
     {
+        if (playerHealth != null && playerHealth.IsDead)
+        {
+            return;
+        }
+        
         float screenCenterX = Screen.width / 2f;
         float screenCenterY = Screen.height / 2f;
         

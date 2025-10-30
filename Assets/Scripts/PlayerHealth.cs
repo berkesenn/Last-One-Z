@@ -5,13 +5,11 @@ public class PlayerHealth : MonoBehaviour
 {
     [Header("Health Settings")]
     public int maxHealth = 100;
-    public int currentHealth; // Public yapıldı ki HealthBarUI erişebilsin
-    
-    // Eski OnGUI UI ayarları kaldırıldı, artık Canvas + HealthBarUI kullanıyoruz
+    public int currentHealth;
     
     [Header("Death Settings")]
     public bool restartOnDeath = true;
-    public float restartDelay = 5f; // 3'ten 5'e çıkardım (2 saniye daha)
+    public float restartDelay = 5f;
     
     // Private variables
     [SerializeField]private bool isDead = false;
@@ -37,8 +35,6 @@ public class PlayerHealth : MonoBehaviour
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
         
-        Debug.Log("Player took " + damage + " damage. Health: " + currentHealth + "/" + maxHealth);
-        
         if (currentHealth <= 0)
         {
             Die();
@@ -52,8 +48,6 @@ public class PlayerHealth : MonoBehaviour
         
         currentHealth += amount;
         currentHealth = Mathf.Min(maxHealth, currentHealth);
-        
-        Debug.Log("Player healed " + amount + ". Health: " + currentHealth + "/" + maxHealth);
     }
     
     public void Die()
@@ -62,44 +56,36 @@ public class PlayerHealth : MonoBehaviour
             return;
         
         isDead = true;
-        IsDead = true; // Property'yi de set et
+        IsDead = true;
         deathTime = Time.time;
-        Debug.Log("Player died!");
 
         AudioManager audioManager = AudioManager.GetInstance();
         if (audioManager != null)
         {
             audioManager.PlayGameOver();
-            audioManager.StopBackgroundMusic(); // Background music'i durdur
-            audioManager.LowerZombieVolume(); // Zombi seslerini kıs
+            audioManager.StopBackgroundMusic();
+            audioManager.LowerZombieVolume();
         }
-
-        // Timer'ı durdur
         GameManager gameManager = FindFirstObjectByType<GameManager>();
         if (gameManager != null)
         {
             gameManager.SetGameOver();
         }
         
-        // Ekranı 1 saniye sonra karart (fade to black effect)
         ScreenFadeEffect fadeEffect = ScreenFadeEffect.GetInstance();
         if (fadeEffect != null)
         {
-            fadeEffect.FadeToBlack(1f, 0.7f); // 1 saniye bekle, 0.7 saniyede karart
+            fadeEffect.FadeToBlack(1f, 0.7f);
         }
         
-        // Lock cursor
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         
-        // Disable controls and play death animation
         PlayerController playerController = GetComponent<PlayerController>();
         if (playerController != null)
         {
-            playerController.PlayDeathAnimation(); // Animasyonu PlayerController'da oynat
-            playerController.enabled = false;
-            
-            Rigidbody rb = GetComponent<Rigidbody>();
+            playerController.PlayDeathAnimation();
+            playerController.enabled = false;            Rigidbody rb = GetComponent<Rigidbody>();
             if (rb != null)
             {
                 rb.isKinematic = true;
@@ -107,8 +93,6 @@ public class PlayerHealth : MonoBehaviour
             }
         }
 
-
-        // Restart after delay
         if (restartOnDeath)
         {
             Invoke("RestartGame", restartDelay);
@@ -117,14 +101,12 @@ public class PlayerHealth : MonoBehaviour
     
     void RestartGame()
     {
-        // Fade efektini sıfırla
         ScreenFadeEffect fadeEffect = ScreenFadeEffect.GetInstance();
         if (fadeEffect != null)
         {
             fadeEffect.ResetFade();
         }
         
-        // Camera'yı eski yerine döndür (eğer scene reload değilse)
         PlayerController playerController = GetComponent<PlayerController>();
         if (playerController != null)
         {

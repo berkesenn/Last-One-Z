@@ -24,7 +24,6 @@ public class LightFlicker : MonoBehaviour
     {
         if (lightComponent != null)
         {
-            // Perlin noise ile yumuşak titreme
             float noise = Mathf.PerlinNoise(Time.time * flickerSpeed, 0f);
             float intensity = Mathf.Lerp(minIntensity, maxIntensity, noise);
             lightComponent.intensity = baseIntensity * intensity;
