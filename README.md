@@ -64,15 +64,7 @@ Survive as long as possible by eliminating zombies and avoiding their attacks. Y
 - **Singleton Pattern**: Centralized managers (AudioManager, GameManager)
 - **Event-Driven System**: Efficient communication between components
 
-## 📋 Programming Principles Applied
-
-This project demonstrates key object-oriented programming concepts:
-- **Encapsulation**: Private fields with public accessors
-- **Inheritance**: MonoBehaviour base class usage
-- **Polymorphism**: Component-based architecture
-- **Abstraction**: Clear separation of concerns between systems
-
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - Unity 6.0 or later
@@ -103,28 +95,21 @@ Assets/
 └── Settings/        # URP and project settings
 ```
 
-## 🎓 Learning Outcomes
-
-This project was created to demonstrate:
-- Unity game development fundamentals
-- First-person controller implementation
-- AI pathfinding and behavior systems
-- Game state management
-- Audio integration
-- UI/UX design in Unity
-- Clean code practices
-
 ## 🐛 Known Issues
 
 None at the moment. Please report any bugs in the Issues section.
 
 ## 📝 License
 
-This project is for educational purposes.
+© 2025 Berke Sen. All Rights Reserved.
+
+This project and its source code are protected by copyright. Unauthorized copying, distribution, or use is strictly prohibited without written permission from the author.
 
 ## 👤 Author
 
-Created as part of Unity Learn's Programming Theory course.
+**Berke Sen**
+
+Developed with Unity 6.0 and C#.
 
 ---
 
